@@ -1,0 +1,9 @@
+# IntelliJ IDEA
+*.iml
+.idea
+
+# Rust
+/target
+
+# Project
+ddns_ip
