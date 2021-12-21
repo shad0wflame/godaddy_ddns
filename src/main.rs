@@ -1,13 +1,13 @@
+mod go_daddy_ddns;
 mod ip_handler;
 
-use ip_handler::ip_has_changed;
+use go_daddy_ddns::*;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    // TODO: [GoDaddy] - Get the domain from ENV variable to replace "a".
+    // TODO: [GoDaddy] - Get the key from ENV variable to replace "b".
+    // TODO: [GoDaddy] - Get the secret from ENV variable to replace "c".
 
-    if ip_has_changed().await {
-        println!("Ip has changed!");
-    }
-
-    Ok(())
+    go_daddy_ddns::exec("a", "b", "c").await
 }
