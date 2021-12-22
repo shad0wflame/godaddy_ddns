@@ -97,8 +97,13 @@ fn get_records() -> Vec<DNSRecord> {
 /// * `key` - A &str holding the GoDaddy developer key.
 ///
 /// * `secret` - A &str holding the GoDaddy developer secret.
-async fn update_record(record: &DNSRecord, value: &str, domain: &str, key: &str, secret: &str) -> () {
-
+async fn update_record(
+    record: &DNSRecord,
+    value: &str,
+    domain: &str,
+    key: &str,
+    secret: &str,
+) -> () {
     let url = format!(
         "https://api.godaddy.com/v1/domains/{domain}/records/{record_type}/{name}",
         domain = domain,
