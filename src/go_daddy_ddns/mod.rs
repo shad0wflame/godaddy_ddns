@@ -1,5 +1,6 @@
 use std::fs::read_to_string;
 use std::path::Path;
+use log::{debug, info};
 
 use serde::{Deserialize, Serialize};
 
@@ -57,16 +58,18 @@ struct DNSRecordCreateTypeName {
 ///
 /// * `secret` - A &str holding the GoDaddy developer secret.
 pub async fn exec(domain: &str, key: &str, secret: &str) -> Result<(), Box<dyn std::error::Error>> {
+    info!("Checking if the IP has changed.");
     let new_ip = get_ip_to_publish().await;
 
     // There's no need to do anything here. So we stop the execution.
     if Option::is_none(&new_ip) {
+        info!("The IP hasn't changed. Let's stop the execution here.");
         return Ok(());
     }
 
-    let records = get_records();
-
-    for record in records {
+    info!("The IP has changed. Let's update the DNS records.");
+    for record in get_records() {
+        debug!("{:?}", record);
         update_record(&record, &new_ip.clone().unwrap(), domain, key, secret).await;
     }
 

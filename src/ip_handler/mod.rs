@@ -2,6 +2,7 @@ use serde::Deserialize;
 use std::fs::{read_to_string, File};
 use std::io::Write;
 use std::path::Path;
+use log::debug;
 
 const IP_FILE_NAME: &'static str = "ddns_ip";
 const WEBSITE_URL: &'static str = "https://httpbin.org/ip";
@@ -21,6 +22,8 @@ pub async fn get_ip_to_publish() -> Option<String> {
     let current_ip = check_current_ip()
         .await
         .expect("Error getting the current IP.");
+
+    debug!("Current IP: {}, Previous IP: {}", current_ip, previous_ip);
 
     if current_ip.eq(&previous_ip) {
         return None;
