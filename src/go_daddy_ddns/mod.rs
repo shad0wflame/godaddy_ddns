@@ -1,52 +1,16 @@
+use std::collections::HashMap;
 use std::fs::read_to_string;
 use std::path::Path;
+
 use log::{debug, info};
+use strfmt::strfmt;
 
-use serde::{Deserialize, Serialize};
-
+use crate::go_daddy_ddns::dns_record::{DNSRecord, DNSRecordsHolder};
 use crate::ip_handler::get_ip_to_publish;
 
+mod dns_record;
+
 const RECORDS_FILE_NAME: &'static str = "records.json";
-
-#[derive(Debug, Deserialize)]
-struct DNSRecordsHolder {
-    records: Vec<DNSRecord>,
-}
-
-#[derive(Debug, Serialize, Deserialize)]
-struct DNSRecord {
-    name: String,
-    record_type: String,
-    data: Option<String>,
-    ttl: u32,
-}
-
-#[derive(Debug, Serialize, Deserialize)]
-struct DNSRecordCreateTypeName {
-    data: String,
-
-    #[serde(skip_serializing_if = "Option::is_none")]
-    #[serde(default)]
-    port: Option<u16>, // SRV Only.
-
-    #[serde(skip_serializing_if = "Option::is_none")]
-    #[serde(default)]
-    priority: Option<u32>, // MX and SRV only.
-
-    #[serde(skip_serializing_if = "Option::is_none")]
-    #[serde(default)]
-    protocol: Option<String>, // SRV only.
-
-    #[serde(skip_serializing_if = "Option::is_none")]
-    #[serde(default)]
-    service: Option<String>, // SRV only.
-
-    ttl: u32,
-
-    #[serde(skip_serializing_if = "Option::is_none")]
-    #[serde(default)]
-    weight: Option<u32>, // SRV only.
-}
 
 /// Updates the DNS records if the IP has changed and returns the result of the execution.
 ///
@@ -62,7 +26,7 @@ pub async fn exec(domain: &str, key: &str, secret: &str) -> Result<(), Box<dyn s
     let new_ip = get_ip_to_publish().await;
 
     // There's no need to do anything here. So we stop the execution.
-    if Option::is_none(&new_ip) {
+    if new_ip.is_none() {
         info!("The IP hasn't changed. Let's stop the execution here.");
         return Ok(());
     }
@@ -70,7 +34,7 @@ pub async fn exec(domain: &str, key: &str, secret: &str) -> Result<(), Box<dyn s
     info!("The IP has changed. Let's update the DNS records.");
     for record in get_records() {
         debug!("{:?}", record);
-        update_record(&record, &new_ip.clone().unwrap(), domain, key, secret).await;
+        update_record(record, &new_ip.clone().unwrap(), domain, key, secret).await;
     }
 
     Ok(())
@@ -91,7 +55,7 @@ fn get_records() -> Vec<DNSRecord> {
 ///
 /// # Arguments
 ///
-/// * `record` - A &DNSRecord holding the record to update.
+/// * `record` - A DNSRecord holding the record to update.
 ///
 /// * `value` - A &str holding the current WAN ip.
 ///
@@ -101,7 +65,7 @@ fn get_records() -> Vec<DNSRecord> {
 ///
 /// * `secret` - A &str holding the GoDaddy developer secret.
 async fn update_record(
-    record: &DNSRecord,
+    record: DNSRecord,
     value: &str,
     domain: &str,
     key: &str,
@@ -110,23 +74,35 @@ async fn update_record(
     let url = format!(
         "https://api.godaddy.com/v1/domains/{domain}/records/{record_type}/{name}",
         domain = domain,
-        record_type = record.record_type,
-        name = record.name
+        record_type = record.record_type.unwrap(),
+        name = record.name.unwrap()
     );
 
     let data = match &record.data {
-        Some(x) => String::from(x),
+        Some(x) => {
+            if record.interpolate.is_some() && record.interpolate.unwrap() == true {
+                let mut vars = HashMap::new();
+                vars.insert("ip".to_string(), value);
+
+                strfmt(x, &vars).expect("Error interpolating {ip} from data.")
+            } else {
+                String::from(x)
+            }
+        }
         None => String::from(value),
     };
 
-    let body = vec![DNSRecordCreateTypeName {
-        data,
-        port: None,
-        priority: None,
-        protocol: None,
-        service: None,
+    let body = vec![DNSRecord {
+        name: None,
+        record_type: None,
+        data: Some(data),
+        port: record.port,
+        priority: record.priority,
+        protocol: record.protocol,
+        service: record.service,
         ttl: record.ttl,
-        weight: None,
+        interpolate: None,
+        weight: record.weight,
     }];
 
     let header = format!("sso-key {}:{}", key, secret);

@@ -181,6 +181,7 @@ dependencies = [
  "serde",
  "serde_json",
  "simple_logger",
+ "strfmt",
  "tokio",
 ]
 
@@ -790,6 +791,12 @@ dependencies = [
  "libc",
  "winapi",
 ]
+
+[[package]]
+name = "strfmt"
+version = "0.1.6"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b278b244ef7aa5852b277f52dd0c6cac3a109919e1f6d699adde63251227a30f"
 
 [[package]]
 name = "syn"
