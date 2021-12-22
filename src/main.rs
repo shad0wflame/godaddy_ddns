@@ -1,13 +1,13 @@
 mod go_daddy_ddns;
 mod ip_handler;
 
-use go_daddy_ddns::*;
+use std::env;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    // TODO: [GoDaddy] - Get the domain from ENV variable to replace "a".
-    // TODO: [GoDaddy] - Get the key from ENV variable to replace "b".
-    // TODO: [GoDaddy] - Get the secret from ENV variable to replace "c".
+    let domain = env::var("DOMAIN").unwrap();
+    let key = env::var("KEY").unwrap();
+    let secret = env::var("SECRET").unwrap();
 
-    go_daddy_ddns::exec("a", "b", "c").await
+    go_daddy_ddns::exec(&domain, &key, &secret).await
 }
