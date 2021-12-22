@@ -1,9 +1,10 @@
-mod go_daddy_ddns;
-mod ip_handler;
+use std::env;
 
 use log::LevelFilter;
 use simple_logger::SimpleLogger;
-use std::env;
+
+mod go_daddy_ddns;
+mod ip_handler;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {

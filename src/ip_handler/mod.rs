@@ -1,16 +1,15 @@
-use serde::Deserialize;
-use std::fs::{read_to_string, File};
+use std::fs::{File, read_to_string};
 use std::io::Write;
 use std::path::Path;
+
 use log::debug;
+
+use crate::ip_handler::ip::IP;
+
+mod ip;
 
 const IP_FILE_NAME: &'static str = "ddns_ip";
 const WEBSITE_URL: &'static str = "https://httpbin.org/ip";
-
-#[derive(Deserialize)]
-struct IP {
-    origin: String,
-}
 
 /// Returns an Option holding the current IP address if the value has changed, otherwise returns None.
 pub async fn get_ip_to_publish() -> Option<String> {
