@@ -1,9 +1,21 @@
+########################################################################################################################
+## Builder
+########################################################################################################################
 FROM rust:1.57 as builder
-WORKDIR /usr/src/godaddy_ddns
-COPY . .
-RUN cargo install --path .
 
-FROM debian:buster-slim
+RUN update-ca-certificates
+
+WORKDIR /usr/src
+
+COPY . .
+
+RUN cargo build --release
+RUN strip -s /usr/src/target/release/godaddy_ddns
+
+########################################################################################################################
+## Final image
+########################################################################################################################
+FROM debian:bullseye-slim
 
 # Install dependencies.
 RUN apt-get update && \
@@ -11,15 +23,15 @@ RUN apt-get update && \
     rm -rf /var/lib/apt/lists/*
 
 # Add application from builder container.
-COPY --from=builder /usr/local/cargo/bin/godaddy_ddns /usr/local/bin/godaddy_ddns
+COPY --from=builder /usr/src/target/release/godaddy_ddns /usr/local/bin/godaddy_ddns
 
 # Add crontab
-COPY --from=builder /usr/src/godaddy_ddns/docker/crontab /etc/cron.d/godaddy_ddns
+COPY --from=builder /usr/src/docker/crontab /etc/cron.d/godaddy_ddns
 RUN chmod 0644 /etc/cron.d/godaddy_ddns
 RUN crontab /etc/cron.d/godaddy_ddns
 
 # Add entrypoint
-COPY --from=builder /usr/src/godaddy_ddns/docker/entrypoint.sh /entrypoint.sh
+COPY --from=builder /usr/src/docker/entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
 
 CMD ["/entrypoint.sh"]
