@@ -1,16 +1,13 @@
 use std::collections::HashMap;
-use std::fs::read_to_string;
-use std::path::Path;
 
 use log::{debug, info};
 use strfmt::strfmt;
 
-use crate::go_daddy_ddns::dns_record::{DNSRecord, DNSRecordsHolder};
+use crate::file_handler::get_records_file;
+use crate::records_handler::dns_record::{DNSRecord, DNSRecordsHolder};
 use crate::ip_handler::get_ip_to_publish;
 
 mod dns_record;
-
-const RECORDS_FILE_NAME: &'static str = "records.json";
 
 /// Updates the DNS records if the IP has changed and returns the result of the execution.
 ///
@@ -21,7 +18,9 @@ const RECORDS_FILE_NAME: &'static str = "records.json";
 /// * `key` - A &str holding the GoDaddy developer key.
 ///
 /// * `secret` - A &str holding the GoDaddy developer secret.
-pub async fn exec(domain: &str, key: &str, secret: &str) -> Result<(), Box<dyn std::error::Error>> {
+pub async fn update(domain: &str, key: &str, secret: &str) -> Result<(), Box<dyn std::error::Error>> {
+    let records = get_records();
+
     info!("Checking if the IP has changed.");
     let new_ip = get_ip_to_publish().await;
 
@@ -32,7 +31,7 @@ pub async fn exec(domain: &str, key: &str, secret: &str) -> Result<(), Box<dyn s
     }
 
     info!("The IP has changed. Let's update the DNS records.");
-    for record in get_records() {
+    for record in records {
         debug!("{:?}", record);
         update_record(record, &new_ip.clone().unwrap(), domain, key, secret).await;
     }
@@ -42,8 +41,7 @@ pub async fn exec(domain: &str, key: &str, secret: &str) -> Result<(), Box<dyn s
 
 /// Gets a vector of DNSRecord from RECORDS_FILE_NAME and returns it.
 fn get_records() -> Vec<DNSRecord> {
-    let path = Path::new(RECORDS_FILE_NAME);
-    let content = read_to_string(path).unwrap();
+    let content = get_records_file();
 
     let base: DNSRecordsHolder =
         serde_json::from_str(&content).expect("Failed to deserialize JSON");
