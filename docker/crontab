@@ -1,0 +1,6 @@
+SHELL=/bin/bash
+BASH_ENV=/etc/profile
+PATH="/usr/local/bin:/usr/bin:/bin"
+
+@reboot godaddy_ddns > /proc/1/fd/1 2>/proc/1/fd/2
+*/10 * * * * godaddy_ddns > /proc/1/fd/1 2>/proc/1/fd/2
