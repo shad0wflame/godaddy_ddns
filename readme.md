@@ -1,9 +1,20 @@
 # GoDaddy DDNS
+![godaddy-ddns](https://user-images.githubusercontent.com/4237627/147422997-f72018be-7f60-4e56-9a52-d2ac81e0dbd5.png)
 
-Rust application to update GoDaddy DNS Records via REST API.
+## What is this?
+It's a Rust application to update GoDaddy DNS Records via REST API.
 
-It order for the application to work, there needs to be a file called `records.json` placed in `$HOME/.godaddy-ddns` 
-with the following structure:
+## Usage
+It order for the application to work, there needs to be: 
+
+* Environment variables:
+  * `DOMAIN` - The domain to update
+  * `KEY` - GoDaddy API Key
+  * `SECRET` - GoDaddy API SECRET
+
+Info about how to generate the **KEY** and the **SECRET** can be found here: https://developer.godaddy.com/getstarted 
+
+* A file called `records.json` placed in `$HOME/.godaddy-ddns` with the following structure:
 
 ```json
 {
